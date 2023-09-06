@@ -1,0 +1,5 @@
+.vscode/
+venv/
+images/
+__pycache__/
+models/
