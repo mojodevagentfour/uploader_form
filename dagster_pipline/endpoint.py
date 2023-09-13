@@ -15,9 +15,9 @@ class order_details(BaseModel):
 @post("/start/")
 async def run_pipline(data: order_details):   # Note: Using the Pydantic model directly
     result = generatekohya_lora.execute_in_process(run_config={"resources": {"order_data": {"config": data.dict()}}})
-    image_validation_result = result.output_for_node("image_validation")
-    if image_validation_result:
-        return {"result": image_validation_result["validation_result"]}
+    # image_validation_result = result.output_for_node("image_validation")
+    # if image_validation_result:
+    #     return {"result": image_validation_result["validation_result"]}
     
     return True
 

@@ -42,8 +42,16 @@ class TensorDock:
             "location": "na-us-chi-1",
             "name": "ray_worker",
             """cloud_init""": """runcmd:
-            - docker login -u mojocreator -p dckr_pat_gYXAFOgplKc7Rgrz5p8Qk2KsHhE
-            - docker run --name=ray_worker --gpus=all --restart=always --network=host -it -d mojocreator/pet-potrait:0.1.9""",
+            - git clone https://github.com/mojodevagentfour/uploader_form.git /home/user/uploader_form
+            - sudo chmod 777 uploader_form/
+            - cd /home/user/uploader_form
+            - sudo apt-get update
+            - sudo apt install -y git curl ffmpeg libsm6 libxext6
+            - sudo apt install python3-pip -y
+            - pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
+            - pip install ultralytics
+            - pip install cleanvision
+            """,
         }
         deploy_req = requests.post(deploy_url, headers=headers, data=deploy_payload)
         self.id = deploy_req.json()["server"]["id"]
@@ -82,7 +90,6 @@ class TensorDock:
         """
         Deletes the servers that are successfully running.
         """
-        if list(server_id.values())[0] == "success":
-            url = f"https://console.tensordock.com/api/delete/single?api_key=recabQkXrkbei2crf&api_token=FCACNCSdkGHeVJOommokqIJlNnCOFO&server={list(server_id.keys())[0]}"
-            response = requests.request("GET", url=url)
-            return response.json()
+        url = f"https://console.tensordock.com/api/delete/single?api_key=recabQkXrkbei2crf&api_token=FCACNCSdkGHeVJOommokqIJlNnCOFO&server={server_id}"
+        response = requests.request("GET", url=url)
+        return response.json()
