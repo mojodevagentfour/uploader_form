@@ -17,7 +17,7 @@ def get_order_images_from_drive(order_number):
     - True if successful.
     """
     # Download classification models
-    model_path = os.getcwd()+"/models/"
+    model_path = "/home/user/uploader_form/models/"
     isexist = os.path.exists(model_path)
     if not isexist:
         # Create a new directory because it does not exist
@@ -31,7 +31,7 @@ def get_order_images_from_drive(order_number):
     print(order_number, "+=++++====++++==")
     drive = DriveConnection(order_number=order_number)
     print("Will check for orders in Drive")
-    path = os.getcwd()+"/images/"
+    path = "/home/user/uploader_form/images/"
     isexist = os.path.exists(path)
     if not isexist:
         # Create a new directory because it does not exist
@@ -50,7 +50,7 @@ def image_validation():
     Returns:
     - A dictionary with validation results.
     """
-    imagelab = Imagelab(data_path=os.getcwd()+"/images/")
+    imagelab = Imagelab(data_path="/home/user/uploader_form/images/")
 
     # Automatically check for a predefined list of issues within your dataset
     imagelab.find_issues()
@@ -90,9 +90,9 @@ def identify_breed_of_animal():
     - A dictionary with Type and Breed information.
     """
     # Loading the model for animal breed classification
-    model = YOLO(os.getcwd()+"/models/animal_breed_classification_yolov8.pt")
+    model = YOLO("/home/user/uploader_form/models/animal_breed_classification_yolov8.pt")
 
-    image_folder_path = os.getcwd()+"/images"
+    image_folder_path = "/home/user/uploader_form/images"
     data = {}
 
     total_images = glob.glob(image_folder_path + "/*.jpeg")
@@ -113,8 +113,8 @@ def find_pose_of_animal():
     Identifies the pose of the animal in the images.
     """
     # Loading the model for animal pose classification
-    model = YOLO(os.getcwd()+"/models/animal_pose_classification.pt")
-    image_folder_path = os.getcwd()+"/images"
+    model = YOLO("/home/user/uploader_form/models/animal_pose_classification.pt")
+    image_folder_path = "/home/user/uploader_form/images"
 
     total_images = glob.glob(image_folder_path + "/*.jpeg")
     for image in total_images:

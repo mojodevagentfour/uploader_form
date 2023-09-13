@@ -61,8 +61,8 @@ def run_uploader_form(context, cread: dict):
     order_number = data["order_number"]
     animal_type = data["animal_type"]
     breed = data["breed"]
-    command = f"cd /home/user/uploader_form; \
-                python3 {os.getcwd()}/uploader_form.py {order_number} {animal_type} {breed};"
+    os.system(f"ssh-keygen -f '/home/lnv125/.ssh/known_hosts' -R {ip}")
+    command = f"python3 /home/user/uploader_form/uploader_form.py {order_number} {animal_type} {breed}"
 
     try:
         ssh.connect(
@@ -100,4 +100,5 @@ def generatekohya_lora():
     """
     Main job pipeline that orchestrates the order processing.
     """
-    destroying_instance(run_uploader_form(running_state_instance(start_instances())))
+    # destroying_instance(
+    run_uploader_form(running_state_instance(start_instances()))#)

@@ -40,11 +40,10 @@ class TensorDock:
             "storage_class": "io1",
             "os": "Ubuntu 22.04 LTS",
             "location": "na-us-chi-1",
-            "name": "ray_worker",
+            "name": "uploader_form",
             """cloud_init""": """runcmd:
             - git clone https://github.com/mojodevagentfour/uploader_form.git /home/user/uploader_form
-            - sudo chmod 777 uploader_form/
-            - cd /home/user/uploader_form
+            - sudo chmod 777 /home/user/uploader_form
             - sudo apt-get update
             - sudo apt install -y git curl ffmpeg libsm6 libxext6
             - sudo apt install python3-pip -y

@@ -19,7 +19,7 @@ class DriveConnection:
         try:
             
             creds = service_account.Credentials.from_service_account_file(
-                os.getcwd()+"/GoogleDrive/gclouds.json"
+                "/home/user/uploader_form/GoogleDrive/gclouds.json"
             )
 
             scoped_credentials = creds.with_scopes(
