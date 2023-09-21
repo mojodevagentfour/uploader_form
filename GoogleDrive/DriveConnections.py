@@ -19,7 +19,7 @@ class DriveConnection:
         try:
             
             creds = service_account.Credentials.from_service_account_file(
-                "/home/user/uploader_form/GoogleDrive/gclouds.json"
+                "/home/lnv125/Desktop/petportrait_ai/uploader_form/GoogleDrive/gclouds.json"
             )
 
             scoped_credentials = creds.with_scopes(
@@ -81,7 +81,7 @@ class DriveConnection:
     def __get_all_files_from_folder(self, top_folder_id):
         page_token = None
         response = self._drive_connection_obj.list(q="'" + top_folder_id + "' in parents", pageSize=1000,
-                    pageToken=page_token, fields="nextPageToken, files(id, name)").execute()
+        pageToken=page_token, fields="nextPageToken, files(id, name)").execute()
         page_token = response.get('nextPageToken')
         return response['files']
 

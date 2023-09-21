@@ -38,20 +38,19 @@ class TensorDock:
             "ram": 4,
             "storage": 80,
             "storage_class": "io1",
-            "os": "Ubuntu 22.04 LTS",
+            "os": "recbSWVCEkrl3wP53",
             "location": "na-us-chi-1",
             "name": "uploader_form",
             """cloud_init""": """runcmd:
-            - git clone https://github.com/mojodevagentfour/uploader_form.git /home/user/uploader_form
-            - sudo chmod 777 /home/user/uploader_form
-            - sudo apt-get update
-            - sudo apt install -y git curl ffmpeg libsm6 libxext6
-            - sudo apt install python3-pip -y
-            - pip install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
-            - pip install ultralytics
-            - pip install cleanvision
+            - docker login -u mojocreator -p dckr_pat_gYXAFOgplKc7Rgrz5p8Qk2KsHhE
             """,
         }
+            # - '#!/bin/bash'
+            # - set -e
+            # - git clone https://github.com/mojodevagentfour/uploader_form.git /home/user/uploader_form
+            # - sudo chmod 777 /home/user/uploader_form
+            # - sudo apt-get update && sudo apt-get install -y git curl ffmpeg libsm6 libxext6 python3-pip
+            # - sudo /usr/bin/pip3 install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib
         deploy_req = requests.post(deploy_url, headers=headers, data=deploy_payload)
         self.id = deploy_req.json()["server"]["id"]
         self.ip = deploy_req.json()["server"]["ip"]

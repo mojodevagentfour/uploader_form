@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from Dagster_pipline import generatekohya_lora
+from Dagster_pipline import generateuploader_form
 from blacksheep import Application
 import json
 app = Application()
@@ -9,15 +9,16 @@ post = app.router.post
 
 class order_details(BaseModel):
     order_number: str 
-    animal_type : str
-    breed: str
 
 @post("/start/")
 async def run_pipline(data: order_details):   # Note: Using the Pydantic model directly
-    result = generatekohya_lora.execute_in_process(run_config={"resources": {"order_data": {"config": data.dict()}}})
-    # image_validation_result = result.output_for_node("image_validation")
-    # if image_validation_result:
-    #     return {"result": image_validation_result["validation_result"]}
+    result = generateuploader_form.execute_in_process(run_config={"resources": {"order_data": {"config": data.dict()}}})
     
-    return True
+    validation_result = result.output_for_node("run_uploader_form")["validation_results"]
+    breed_result = result.output_for_node("run_uploader_form")["breed_results"]
 
+    # Modify the below return statement as per your requirements
+    return {
+        "validation": validation_result,
+        "breed": breed_result
+    }

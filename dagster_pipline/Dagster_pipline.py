@@ -1,14 +1,11 @@
 from dagster import job, resource, op
 from GoogleDrive.DriveConnections import DriveConnection
 import paramiko
-from ultralytics import YOLO
-from cleanvision import Imagelab
 from tensordock import TensorDock
 import sys
 import os
-import glob
+import json
 import time
-import pprint
 
 
 @resource
@@ -52,17 +49,21 @@ def running_state_instance(start_instances_output: dict):
 
 
 @op(required_resource_keys={"order_data"})
-def run_uploader_form(context, cread: dict):
+def run_uploader_form(context, cread:dict):
     data = context.resources.order_data
-    print(data, "+=+++===++++")
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ip = cread["Ip"]
     order_number = data["order_number"]
-    animal_type = data["animal_type"]
-    breed = data["breed"]
+    # animal_type = data["animal_type"]
+    # breed = data["breed"]
     os.system(f"ssh-keygen -f '/home/lnv125/.ssh/known_hosts' -R {ip}")
-    command = f"python3 /home/user/uploader_form/uploader_form.py {order_number} {animal_type} {breed}"
+    os.system("fuser -k 22/tcp")
+    time.sleep(15)
+    # command = "sudo apt install python3-pip -y; \
+    #             pip3 install ultralytics; \
+    #             pip3 install cleanvision;"
+    command = f"sudo docker run -it mojocreator/uploader_form:0.1.1 python uploader_form.py {order_number}"
 
     try:
         ssh.connect(
@@ -70,24 +71,29 @@ def run_uploader_form(context, cread: dict):
             username="user",
             password="test@1pass",
         )
-
+        result_lines = []
         _, stdout, __ = ssh.exec_command(command, get_pty=True)
         for line in iter(stdout.readline, ""):
             print(line, end="")
-
-        return cread
+            result_lines.append(line.strip())
+            if '{"validation_results":' in line:
+                results = json.loads(result_lines[-1])
+                break
 
     except paramiko.SSHException as error:
         print(error)
+        run_uploader_form(context, cread)
+    ssh.close()
+    return results
+
 
 
 @op
-def destroying_instance(cread: dict):
+def destroying_instance(results:dict, cread:dict):
     """
     Destroys the server instances once operations are complete.
     """
     server_id = cread["Id"]
-    print(server_id, "++++====++++")
     status = TensorDock().delete_server(server_id=server_id)
     if status["success"]:
         print("Instance destroyed..!!!")
@@ -96,9 +102,10 @@ def destroying_instance(cread: dict):
 
 
 @job(resource_defs={"order_data": order_data_resource})
-def generatekohya_lora():
+def generateuploader_form():
     """
     Main job pipeline that orchestrates the order processing.
     """
-    # destroying_instance(
-    run_uploader_form(running_state_instance(start_instances()))#)
+    cread = running_state_instance(start_instances())
+    results = run_uploader_form(cread)
+    destroying_instance(results, cread)
