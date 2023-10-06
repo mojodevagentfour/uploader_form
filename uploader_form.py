@@ -1,47 +1,34 @@
-from GoogleDrive.DriveConnections import DriveConnection
 from ultralytics import YOLO
 from cleanvision import Imagelab
 import threading
 import asyncio
 import json
 import glob
-import time
 import pprint
-import sys
 import os
+import base64
+import pickle
 
 
-image_path = "/home/lnv125/Desktop/petportrait_ai/uploader_form/images"
-model_path = "/home/lnv125/Desktop/petportrait_ai/uploader_form/models"
+image_path = "/home/lnv125/Desktop/petportrait_ai/aws_infra/images"
+model_path = "/home/lnv125/Desktop/petportrait_ai/aws_infra/models"
 
-def get_order_images_from_drive(order_number):
+def get_order_images_from_drive(data):
     """
     Fetches the order images from Google Drive.
 
     Returns:
     - True if successful.
     """
-    # Download classification models
-    isexist = os.path.exists(model_path)
-    if not isexist:
-        # Create a new directory because it does not exist
-        os.makedirs(model_path)
-        drive = DriveConnection(order_number="models")
-        drive.download_files(
-            folder_path=model_path, folder_id="1kZQr8st_CMjoTbm1evJPvdwVPlKAdUiY"
-        )
-
-    # download Images
-    print(order_number, "+=++++====++++==")
-    drive = DriveConnection(order_number=order_number)
-    print("Will check for orders in Drive")
     isexist = os.path.exists(image_path)
     if not isexist:
-        # Create a new directory because it does not exist
         os.makedirs(image_path)
-        drive.download_files(
-            folder_path=image_path, folder_id="1lNkSscwxEfq5WcgnSX4o53qjlZqTbc0v"
-        )
+        for image_name, image_data in data.items():
+            print(image_name,"+++===++++")
+            image_data = base64.b64decode(image_data)
+            with open(image_path+"/"+image_name, "wb") as image_file:
+                image_file.write(image_data)
+
     return True
 
 
@@ -131,24 +118,6 @@ async def find_pose_of_animal():
     pprint.pprint(pose)
     return pose
 
-# start = time.time()
-# if len(sys.argv) != 4:
-#     print("Usage: python uploader_form.py <order_number> <animal_type> <breed>")
-#     sys.exit(1)
-
-# order_number = sys.argv[1]
-# animal_type = sys.argv[2]
-# breed = sys.argv[3]
-
-
-# get_order_images_from_drive(order_number)
-# image_validation()
-# identify_breed_of_animal()
-# find_pose_of_animal()
-# import shutil
-# shutil.rmtree(image_path)
-# stop = time.time()
-# print(stop - start)
 def run_async_in_thread(loop, coro):
     asyncio.set_event_loop(loop)
     loop.run_until_complete(coro)
@@ -157,11 +126,11 @@ def background_task():
     loop = asyncio.new_event_loop()
     loop.run_until_complete(find_pose_of_animal())
 
-def main(order_number):
-    get_order_images_from_drive(order_number)
+def main(data):
+    get_order_images_from_drive(data)
     validation_results = image_validation()
     breed_results = identify_breed_of_animal()
-
+    
     # Start the background task
     thread = threading.Thread(target=background_task)
     thread.start()
@@ -172,13 +141,11 @@ def main(order_number):
     }
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python uploader_form.py <order_number>")
-        sys.exit(1)
-
-    order_number = sys.argv[1]
-    # animal_type = sys.argv[2]  # You're not using this currently
-    # breed = sys.argv[3]        # You're not using this currently
-
-    results = main(order_number)
+    
+    file = open('dictionary_data.pkl', 'rb')
+    # dump information to that file
+    data = pickle.load(file)
+    # close the file
+    file.close()
+    results = main(data)
     print(json.dumps(results))
