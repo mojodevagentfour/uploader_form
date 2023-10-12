@@ -57,10 +57,6 @@ def image_validation():
                         list(imagelab.issues[column].index)[i].split("/")[::-1][0],
                     )
                     count += 1
-                    issue[column] = list(imagelab.issues[column].index)[i].split("/")[::-1][0]
-    # print("{0} in file found at {1}".format(",".join(issue.keys()), issue.values()))
-    # Logic to validate the image...
-    validation_result = "{Defecting reason} in file found at {file name}"  # Example result; replace with your actual logic
     if issue:
         return {"validation_result": issue}
     else:
@@ -100,18 +96,17 @@ async def find_pose_of_animal():
     pose = {}
     total_images = glob.glob(image_path + "/*")
     results = model(total_images)
+    # Loop through each result and extract pose information
     for i in range(len(results)):
         result = results[i]
         box = result.boxes
+
+        # Try extracting body type of the animal and add to the pose dictionary
         try:
             body = box.cls[0].item()
-            pose[result.path] = {"face type:", result.names[body]}
-        except Exception:
-            pass
-
-        try:
+            # Try extracting face type of the animal and add to the pose dictionary
             face = box.cls[1].item()
-            pose[result.path] = {"body type:", result.names[face]}
+            pose[f"image_{i}.jpg"] = [{"face type":result.names[body]}, {"body type": result.names[face]}]
         except Exception:
             pass
 
