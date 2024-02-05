@@ -7,61 +7,67 @@ import glob
 import logging
 import boto3
 
-
+# Setting up logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def handler(event, context):
     """
-    AWS Lambda handler that performs the following tasks:
-    1. Retrieves a image data
-    2. Extracts all files from the data and re-uploads them into to the S3 bucket.
-    3. Converts images found in a specified path to base64 format.
-    4. Reads a pickled data from a file named 'image_data.pkl'.
-    5. Validates images using the `image_validation` function.
-    6. Classifies the animal breed in the images using the `identify_breed_of_animal` function.
+    AWS Lambda function handler to process images and identify animal type and breed.
 
-    Args:
-        event (dict): Contains information about the triggering event.
-        context (LambdaContext): AWS Lambda context object which provides metadata on the currently executing lambda function.
-
-    Raises:
-        e (Exception): Propagates exceptions raised during S3 operations or image processing.
+    Parameters:
+    - event (dict): AWS Lambda event object. It is expected to contain:
+        * 'jobid' (str): The job identifier.
+        * 'images' (list): List containing base64 encoded images to process. 
+            Each item in the list is a dictionary with 'image_data' key containing base64 encoded image data.
+    - context (obj): AWS Lambda context object (not used in this function).
 
     Returns:
-        dict: A dictionary containing validation results and breed identification results.
-    """
-    bucket_name: str = "uploaderform-1"
-    key = f"input/{event['jobid']}/{event['jobid']}_image_data.json"
-    model = YOLO("./animal_breed_classification_yolov8.pt")
+    - dict: A dictionary containing:
+        * 'job_id' (str): The job identifier.
+        * 'breed_results' (dict): Dictionary with image names as keys and detected animal type and breed as values.
 
-    np_arr = []
-    for index , base64_string in enumerate(event['images'][:2]):
-      base64_file = base64_string
-      image_bytes = base64.b64decode(base64_file)
-      nparr = np.fromstring(image_bytes, np.uint8)
-      img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-      np_arr.append(img_np)
-    
-    results = model(np_arr) 
-    
+    Workflow:
+    1. Fetches the image data from the 'event'.
+    2. Decodes the base64 encoded image and converts it into a numpy array format suitable for processing.
+    3. Uses the YOLOv8 model to predict animal type and breed.
+    4. Stores the predictions along with the image names in the results dictionary.
+    5. Writes the results to an S3 bucket.
+    6. Returns the job id and the results.
+    """
+   
+    bucket_name: str = "uploaderform-1" # Bucket where the results will be stored
+    key = f"input/{event['jobid']}/{event['jobid']}_image_data.json" # Location (key) in the bucket where results will be stored
+    model = YOLO("./animal_breed_classification_yolov8.pt") # Load the YOLO model for animal type and breed detection
+
+    np_arr, image_name = [], []
+    # Decode base64 images and convert them to numpy array format
+    for index , base64_string in enumerate(event['images']):
+        base64_file = base64_string["image_data"]
+        file_name = base64_string["file_name"]
+        image_bytes = base64.b64decode(base64_file)
+        nparr = np.fromstring(image_bytes, np.uint8)
+        img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        np_arr.append(img_np)
+        image_name.append(file_name)
+
+    # Predict animal type and breed using the YOLO model
+    results = model.predict(np_arr)  
     data = {}
-    for image in results:
+    # # Extract the predictions from the results
+    for index, image in enumerate(results):
         result = image.probs
         name = image.names[result.top1]
         animal_type = name.split("_")[0]
         breed = "_".join(name.split("_")[1:])
-        image_name = image.path.split("/")[::-1][0]
-        data[image_name] = {"Type": animal_type, "Breed": breed}
+        data[image_name[index]] = {"Type": animal_type, "Breed": breed}
+        event['images'][index]["animal_type"] = animal_type
+        event['images'][index]["breed"] = breed
 
-
+    # Save the results to the specified S3 bucket
     s3 = boto3.resource('s3')
-
     s3object = s3.Object(bucket_name, key)
+    s3object.put(Body=json.dumps((event)))
 
-    s3object.put(
-        Body=(bytes(json.dumps(event).encode('UTF-8')))
-    )
-
-
+    # Return the results 
     return {"job_id":event['jobid'],"breed_results": data}
