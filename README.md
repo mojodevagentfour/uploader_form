@@ -14,7 +14,7 @@ The Uplaoder_form project leverages AWS infrastructure to intake animal images f
             "height": int,
             "created_date": "str",
             "compression_quality": int,
-            "file_name": "int"
+            "file_name": "str"
         },
         {"image_data": "dcjwkwnc", "width": 500,
             "height": 500,
