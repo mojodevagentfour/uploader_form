@@ -10,7 +10,20 @@ The Uplaoder_form project leverages AWS infrastructure to intake animal images f
 
 ### Components:
 - **API Gateway**:
-    Accepts animal images in base64 format and provides a response structure: {"jobid": "", "images":["",""]}.
+    Accepts animal images in base64 format and provides a response structure: {"jobid": "str", "images": [{"image_data": "Base64_Image_str", "width": int,
+            "height": int,
+            "created_date": "str",
+            "compression_quality": int,
+            "file_name": "int"
+        },
+        {"image_data": "dcjwkwnc", "width": 500,
+            "height": 500,
+            "created_date": "2024-01-23 17:07",
+            "compression_quality": 60,
+            "file_name": "IMG_4841.jpeg"
+        }
+    ]
+}.
 
 - **Lambda_1 (Animal Type & Breed Detection)**:
     Triggered by API Gateway.
